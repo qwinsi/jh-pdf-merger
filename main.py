@@ -1,8 +1,40 @@
 import sys
 
+from PyQt5 import QtGui, QtCore
+from PyQt5.QtCore import pyqtSignal
+
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QAction, \
-    QVBoxLayout, QFileDialog, QListWidget
-from pypdf import PdfWriter, PdfReader
+    QVBoxLayout, QHBoxLayout, QFileDialog, QListWidget, QLabel, QPlainTextEdit, QSpacerItem, QSizePolicy, QCheckBox, \
+    QButtonGroup
+
+from merger import combine_pdf_files, BookmarkMode
+
+
+# popup a warning dialog
+def request_confirmation(msg: str) -> bool:
+    msg_box = QMessageBox()
+    msg_box.setWindowTitle("Additional Confirmation")
+    msg_box.setText(msg)
+    msg_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+    msg_box.button(QMessageBox.Ok).setText("Continue")
+    msg_box.setDefaultButton(QMessageBox.Cancel)
+    result = msg_box.exec()
+    return result == QMessageBox.Ok
+
+
+class MyPlainTextEdit(QPlainTextEdit):
+    signal_text_submitted = pyqtSignal(str)
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        key = event.key()
+        if key == QtCore.Qt.Key_Return or key == QtCore.Qt.Key_Enter:
+            text = self.toPlainText()
+            self.signal_text_submitted.emit(self.toPlainText())
+        else:
+            super().keyPressEvent(event)
 
 
 class MainWindow(QMainWindow):
@@ -16,13 +48,55 @@ class MainWindow(QMainWindow):
 
         # Create a QListWidget to display selected filenames
         self.fileListWidget = QListWidget(self)
+        self.fileListWidget.setGeometry(0, 0, 600, 800)
+        self.fileListWidget.clicked.connect(self.openFileDialog)
+
+        self.bookmark_enabled_checkbox = QCheckBox("Make bookmark")
+        self.bookmark_enabled_checkbox.setChecked(True)
+        # a group of radio buttons to select bookmark mode
+        self.bookmark_mode_group = QButtonGroup()
+        self.bookmark_mode_group.setExclusive(True)
+        only_file_name_radio = QCheckBox("from only file names")
+        only_file_name_radio.setChecked(True)
+        self.bookmark_mode_group.addButton(only_file_name_radio, BookmarkMode.FILE_NAME_AS_BOOKMARK.value)
+        both_file_name_and_section_radio = QCheckBox("from file names and bookmarks")
+        self.bookmark_mode_group.addButton(both_file_name_and_section_radio,
+                                           BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK.value)
+
+        self.output_path_edit = MyPlainTextEdit(None)
+        self.output_path_edit.signal_text_submitted.connect(self.combinePdfs)
 
         central_widget = QWidget(self)
         layout = QVBoxLayout()
         layout.addWidget(self.fileListWidget)
+
+        verticalSpacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        layout.addItem(verticalSpacer)
+
+        layout.addWidget(self.bookmark_enabled_checkbox)
+        layout.addWidget(self.bookmark_mode_group.buttons()[0])
+        layout.addWidget(self.bookmark_mode_group.buttons()[1])
+
+        output_area_layout = QHBoxLayout()
+        output_path_label = QLabel("Output Path:")
+        output_area_layout.addWidget(output_path_label)
+        # height of output_path_edit just fits single line
+        self.output_path_edit.setFixedHeight(36)
+        output_area_layout.addWidget(self.output_path_edit)
+        layout.addLayout(output_area_layout)
+
         central_widget.setLayout(layout)
 
         self.setCentralWidget(central_widget)
+
+        self.combine_action = QAction("Merge Files", self)
+        self.combine_action.triggered.connect(self.combinePdfs)
+        self.combine_action.setShortcut("Ctrl+R")
+        self.combine_action.setEnabled(False)
+
+        self.clear_action = QAction("Clear Selection", self)
+        self.clear_action.triggered.connect(self.clearSelection)
+
 
         self._setUpMenuBar()
 
@@ -36,6 +110,8 @@ class MainWindow(QMainWindow):
         open_action.setShortcut("Ctrl+O")
         file_menu.addAction(open_action)
 
+        file_menu.addAction(self.clear_action)
+
         exit_action = QAction("Exit", self)
         exit_action.triggered.connect(self.close)
         # bind ctrl+q on Windows/Linux or cmd+q on Mac to exit
@@ -43,10 +119,8 @@ class MainWindow(QMainWindow):
         file_menu.addAction(exit_action)
 
         run_menu = menu.addMenu("Run")
-        combine_action = QAction("Print List", self)
-        combine_action.triggered.connect(self.combinePdfs)
-        combine_action.setShortcut("Ctrl+R")
-        run_menu.addAction(combine_action)
+
+        run_menu.addAction(self.combine_action)
 
         help_menu = menu.addMenu("Help")
         about_action = QAction("About", self)
@@ -65,50 +139,54 @@ class MainWindow(QMainWindow):
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
         files, _ = file_dialog.getOpenFileNames(self, "Add File(s)", "", "PDF Files (*.pdf)", options=options)
 
-        if files:
+        if len(files) > 0:
             # Add selected filenames to the QListWidget
             self.fileListWidget.addItems(files)
+            self.combine_action.setEnabled(True)
+            output_path = self.output_path_edit.toPlainText()
+            if not output_path.endswith(".pdf") and not output_path.endswith(".PDF"):
+                # set default output path to be the same as the last selected file
+                last_item = files[-1]
+                index = last_item.rfind('/')
+                base_path = last_item[:index]
+                default_output_name = "merge-output.pdf"
+                self.output_path_edit.setPlainText(f"{base_path}/{default_output_name}")
+
+    def clearSelection(self):
+        self.fileListWidget.clear()
+        self.combine_action.setEnabled(False)
 
     def combinePdfs(self):
+        if not self.combine_action.isEnabled():
+            return
+
+        output_path = self.output_path_edit.toPlainText()
+        # popup a warning dialog if output file name does not end with .pdf
+        if not output_path.endswith(".pdf") and not output_path.endswith(".PDF"):
+            ok = request_confirmation('Output file name is recommended to end with ".pdf" or ".PDF" '
+                                      'but what you entered is not.'
+                                      '\nContinue to use this file name as output anyway?')
+            if not ok:
+                return
+        # popup a warning dialog if output file already exists
+        if QtCore.QFile.exists(output_path):
+            ok = request_confirmation(f"A file named {output_path} already exists. Continue to overwrite?")
+            if not ok:
+                return
+
         length = self.fileListWidget.count()
         file_paths = [self.fileListWidget.item(i).text() for i in range(length)]
         print(f"Starting to combine {length} PDFs: {file_paths}")
 
-        merger = PdfWriter()
-        page_num = 0
-
-        def insert_bookmarks(reader, bookmark_or_list, parent, last_added_bm=None):
-            # last_added_bm = parent
-            if isinstance(bookmark_or_list, list):
-                for bm in bookmark_or_list:
-                    if isinstance(bm, list):
-                        insert_bookmarks(reader, bm, last_added_bm)
-                    else:
-                        last_added_bm = insert_bookmarks(reader, bm, parent)
-            else:
-                item = bookmark_or_list
-                page_offset = reader.get_destination_page_number(item)
-                # print(f"{item.title} => {page_offset}")
-                return merger.add_outline_item(item.title, page_num + page_offset, parent)
-
-        for file_path in file_paths:
-            file_name = file_path.split('/')[-1]
-
-            # trim off the .pdf extension
-            if file_name.endswith('.pdf') or file_name.endswith('.PDF'):
-                file_name = file_name[:-4]
-
-            with open(file_path, 'rb') as pdf_file:
-                pdf_reader = PdfReader(pdf_file)
-                merger.append_pages_from_reader(pdf_reader)
-                new_outline = merger.add_outline_item(file_name, page_num)
-                insert_bookmarks(pdf_reader, pdf_reader.outline, new_outline)
-                page_num += len(pdf_reader.pages)
-
-        merger.write("merged-pdf.pdf")
-        merger.close()
+        combine_pdf_files(file_paths, output_path, BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK)
 
         print("Finished combining PDFs!")
+
+        ok_msg_box = QMessageBox()
+        ok_msg_box.setWindowTitle("Success")
+        ok_msg_box.setText("Finished combining PDFs!")
+        ok_msg_box.setStandardButtons(QMessageBox.Ok)
+        ok_msg_box.exec()
 
 
 def main():
