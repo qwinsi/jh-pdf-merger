@@ -149,6 +149,10 @@ class MainWindow(QMainWindow):
                 last_item = files[-1]
                 index = last_item.rfind('/')
                 base_path = last_item[:index]
+                # use the parent directory if possible
+                if base_path.count('/') > 0:
+                    index = base_path.rfind('/')
+                    base_path = base_path[:index]
                 default_output_name = "merge-output.pdf"
                 self.output_path_edit.setPlainText(f"{base_path}/{default_output_name}")
 
