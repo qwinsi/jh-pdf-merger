@@ -14,9 +14,9 @@ _WEBSITE_URL = "https://github.com/qwinsi/jh-pdf-merger"
 
 
 # popup a warning dialog
-def request_confirmation(msg: str) -> bool:
-    msg_box = QMessageBox()
-    msg_box.setWindowTitle("Additional Confirmation")
+def request_confirmation(msg: str, title: str, parent: QWidget) -> bool:
+    msg_box = QMessageBox(parent)
+    msg_box.setWindowTitle(title)
     msg_box.setText(msg)
     msg_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     msg_box.button(QMessageBox.Ok).setText("Continue")
@@ -26,8 +26,8 @@ def request_confirmation(msg: str) -> bool:
 
 
 # popup a simple message box
-def show_message(msg: str, title: str):
-    msg_box = QMessageBox()
+def show_message(msg: str, title: str, parent: QWidget):
+    msg_box = QMessageBox(parent)
     msg_box.setWindowTitle(title)
     msg_box.setText(msg)
     msg_box.setStandardButtons(QMessageBox.Ok)
@@ -37,14 +37,14 @@ def show_message(msg: str, title: str):
 class MyPlainTextEdit(QPlainTextEdit):
     signal_text_submitted = pyqtSignal(str)
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget):
         super().__init__(parent)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         key = event.key()
         if key == QtCore.Qt.Key_Return or key == QtCore.Qt.Key_Enter:
             text = self.toPlainText()
-            self.signal_text_submitted.emit(self.toPlainText())
+            self.signal_text_submitted.emit(text)
         else:
             super().keyPressEvent(event)
 
@@ -54,10 +54,9 @@ class UserCancelled(Exception):
 
 
 class AboutDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.setWindowTitle(f"About {_APP_NAME}")
-        # self.setGeometry(100, 100, 600, 400)
         self.setMinimumSize(360, 120)
 
         layout = QVBoxLayout()
@@ -76,6 +75,7 @@ class MainWindow(QMainWindow):
     def _initUI(self):
         self.setWindowTitle(_APP_NAME)
         self.setGeometry(100, 100, 600, 400)
+        self.setWindowIcon(QtGui.QIcon('jh-pdf-merger.ico'))
 
         # Create a QListWidget to display selected filenames
         self.fileListWidget = QListWidget(self)
@@ -233,12 +233,16 @@ class MainWindow(QMainWindow):
         if not output_path.endswith(".pdf") and not output_path.endswith(".PDF"):
             ok = request_confirmation('Output file name is recommended to end with ".pdf" or ".PDF" '
                                       'but what you entered is not.'
-                                      '\nContinue to use this file name as output anyway?')
+                                      '\nContinue to use this file name as output anyway?',
+                                      "Additional Confirmation",
+                                      self)
             if not ok:
                 return
         # popup a warning dialog if output file already exists
         if QtCore.QFile.exists(output_path):
-            ok = request_confirmation(f"A file named {output_path} already exists. Continue to overwrite?")
+            ok = request_confirmation(f"A file named {output_path} already exists. Continue to overwrite?",
+                                      "Additional Confirmation",
+                                      self)
             if not ok:
                 return
 
@@ -261,14 +265,14 @@ class MainWindow(QMainWindow):
         try:
             merge_pdf_files(file_paths, output_path, self.getBookmarkMode(), tick_callback)
         except UserCancelled:
-            show_message("You have cancelled the merge operation.", "Cancelled")
+            show_message("You have cancelled the merge operation.", "Cancelled", self)
             print("User cancelled the merge operation.")
             return
 
         process_dialog.reset()
         print("Finished merging PDFs!")
 
-        show_message("Finished merging PDFs!", "Success")
+        show_message("Finished merging PDFs!", "Success", self)
 
 
 def main():

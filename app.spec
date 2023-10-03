@@ -21,6 +21,9 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# https://stackoverflow.com/questions/33144448/icons-in-pyqt-app-created-by-pyinstaller-wont-work-on-other-computers
+a.datas += [('jh-pdf-merger.ico', 'jh-pdf-merger.ico', 'DATA')]
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -37,7 +40,9 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='jh-pdf-merger.ico',
 )
+
 
 coll = COLLECT(
     exe,
