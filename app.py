@@ -11,6 +11,7 @@ from merger import combine_pdf_files, BookmarkMode
 
 _APP_NAME = "PDF Merger"
 
+
 # popup a warning dialog
 def request_confirmation(msg: str) -> bool:
     msg_box = QMessageBox()
@@ -21,6 +22,7 @@ def request_confirmation(msg: str) -> bool:
     msg_box.setDefaultButton(QMessageBox.Cancel)
     result = msg_box.exec()
     return result == QMessageBox.Ok
+
 
 # popup a simple message box
 def show_message(msg: str, title: str):
@@ -45,8 +47,10 @@ class MyPlainTextEdit(QPlainTextEdit):
         else:
             super().keyPressEvent(event)
 
+
 class UserCancelled(Exception):
     pass
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -66,13 +70,17 @@ class MainWindow(QMainWindow):
         self.bookmark_enabled_checkbox.setChecked(True)
         # a group of radio buttons to select bookmark mode
         self.bookmark_mode_group = QButtonGroup()
-        self.bookmark_mode_group.setExclusive(True)
-        only_file_name_radio = QCheckBox("from only file names")
-        only_file_name_radio.setChecked(True)
-        self.bookmark_mode_group.addButton(only_file_name_radio, BookmarkMode.FILE_NAME_AS_BOOKMARK.value)
         both_file_name_and_section_radio = QCheckBox("from file names and bookmarks")
+        both_file_name_and_section_radio.setChecked(True)
         self.bookmark_mode_group.addButton(both_file_name_and_section_radio,
                                            BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK.value)
+        self.bookmark_mode_group.setExclusive(True)
+        only_file_name_radio = QCheckBox("from only file names")
+        self.bookmark_mode_group.addButton(only_file_name_radio, BookmarkMode.FILE_NAME_AS_BOOKMARK.value)
+
+        self.bookmark_enabled_checkbox.stateChanged.connect(
+            lambda state: self._toggleBookmarkMode(state == QtCore.Qt.Checked))
+        # self.bookmark_enabled_checkbox.stateChanged.connect(lambda state: self.bookmark_mode_group.setEnabled(state))
 
         self.output_path_edit = MyPlainTextEdit(None)
         self.output_path_edit.signal_text_submitted.connect(self.combinePdfs)
@@ -85,8 +93,16 @@ class MainWindow(QMainWindow):
         layout.addItem(verticalSpacer)
 
         layout.addWidget(self.bookmark_enabled_checkbox)
-        layout.addWidget(self.bookmark_mode_group.buttons()[0])
-        layout.addWidget(self.bookmark_mode_group.buttons()[1])
+        # There should be an indent for the radio buttons. So that the user can know they are related to the checkbox
+        # for button in self.bookmark_mode_group.buttons():
+        #     layout.addWidget(button)
+        hierarchy_layout = QHBoxLayout()
+        hierarchy_layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Minimum))
+        radio_group_layout = QVBoxLayout()
+        radio_group_layout.addWidget(only_file_name_radio)
+        radio_group_layout.addWidget(both_file_name_and_section_radio)
+        hierarchy_layout.addLayout(radio_group_layout)
+        layout.addLayout(hierarchy_layout)
 
         output_area_layout = QHBoxLayout()
         output_path_label = QLabel("Output Path:")
@@ -107,7 +123,6 @@ class MainWindow(QMainWindow):
 
         self.clear_action = QAction("Clear Selection", self)
         self.clear_action.triggered.connect(self.clearSelection)
-
 
         self._setUpMenuBar()
 
@@ -137,6 +152,18 @@ class MainWindow(QMainWindow):
         about_action = QAction("About", self)
         about_action.triggered.connect(self.openAboutDialog)
         help_menu.addAction(about_action)
+
+    def _toggleBookmarkMode(self, enabled: bool):
+        if enabled:
+            self.bookmark_mode_group.setExclusive(True)
+            self.bookmark_mode_group.buttons()[0].setChecked(True)
+            for button in self.bookmark_mode_group.buttons():
+                button.setEnabled(True)
+        else:
+            self.bookmark_mode_group.setExclusive(False)
+            for button in self.bookmark_mode_group.buttons():
+                button.setEnabled(False)  # the checkbox gets grey
+                button.setChecked(False)
 
     def openAboutDialog(self):
         QMessageBox.about(self, "About", "This is my awesome program.\n https://www.example.com")
