@@ -23,6 +23,7 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 # https://stackoverflow.com/questions/33144448/icons-in-pyqt-app-created-by-pyinstaller-wont-work-on-other-computers
 a.datas += [('jh-pdf-merger.ico', 'jh-pdf-merger.ico', 'DATA')]
+a.datas += [('lang/zh_CN.qm', 'lang/zh_CN.qm', 'DATA')]
 
 exe = EXE(
     pyz,

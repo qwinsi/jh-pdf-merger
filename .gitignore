@@ -9,3 +9,5 @@ build/
 dist/
 
 tool/jh-pdf-merger.ico
+# generated QT i18n files
+lang/*.qm
