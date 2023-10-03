@@ -10,9 +10,9 @@ class BookmarkMode(enum.Enum):
     # source file names and bookmark are used as output bookmarks
     FILE_NAME_AND_SECTION_AS_BOOKMARK = 2
 
-def combine_pdf_files(source_files: list[str], output_file: str, bookmark_mode: BookmarkMode, tick_callback):
+def merge_pdf_files(source_files: list[str], output_file: str, bookmark_mode: BookmarkMode, tick_callback):
     """
-    Combine multiple PDF files into one.
+    Merge multiple PDF files into one.
     :param source_files: list of source PDF file paths
     :param output_file: output PDF file path
     :param bookmark_mode: BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK is commonly used.

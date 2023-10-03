@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QAc
     QVBoxLayout, QHBoxLayout, QFileDialog, QListWidget, QLabel, QPlainTextEdit, QSpacerItem, QSizePolicy, QCheckBox, \
     QButtonGroup, QProgressDialog
 
-from merger import combine_pdf_files, BookmarkMode
+from merger import merge_pdf_files, BookmarkMode
 
 _APP_NAME = "PDF Merger"
 
@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         # self.bookmark_enabled_checkbox.stateChanged.connect(lambda state: self.bookmark_mode_group.setEnabled(state))
 
         self.output_path_edit = MyPlainTextEdit(None)
-        self.output_path_edit.signal_text_submitted.connect(self.combinePdfs)
+        self.output_path_edit.signal_text_submitted.connect(self.mergePdfs)
 
         central_widget = QWidget(self)
         layout = QVBoxLayout()
@@ -116,10 +116,10 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(central_widget)
 
-        self.combine_action = QAction("Merge Files", self)
-        self.combine_action.triggered.connect(self.combinePdfs)
-        self.combine_action.setShortcut("Ctrl+R")
-        self.combine_action.setEnabled(False)
+        self.merge_action = QAction("Merge Files", self)
+        self.merge_action.triggered.connect(self.mergePdfs)
+        self.merge_action.setShortcut("Ctrl+R")
+        self.merge_action.setEnabled(False)
 
         self.clear_action = QAction("Clear Selection", self)
         self.clear_action.triggered.connect(self.clearSelection)
@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
 
         run_menu = menu.addMenu("Run")
 
-        run_menu.addAction(self.combine_action)
+        run_menu.addAction(self.merge_action)
 
         help_menu = menu.addMenu("Help")
         about_action = QAction("About", self)
@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         if len(files) > 0:
             # Add selected filenames to the QListWidget
             self.fileListWidget.addItems(files)
-            self.combine_action.setEnabled(True)
+            self.merge_action.setEnabled(True)
             output_path = self.output_path_edit.toPlainText()
             if not output_path.endswith(".pdf") and not output_path.endswith(".PDF"):
                 # set default output path to be the same as the last selected file
@@ -207,10 +207,10 @@ class MainWindow(QMainWindow):
 
     def clearSelection(self):
         self.fileListWidget.clear()
-        self.combine_action.setEnabled(False)
+        self.merge_action.setEnabled(False)
 
-    def combinePdfs(self):
-        if not self.combine_action.isEnabled():
+    def mergePdfs(self):
+        if not self.merge_action.isEnabled():
             return
 
         output_path = self.output_path_edit.toPlainText()
@@ -229,11 +229,11 @@ class MainWindow(QMainWindow):
 
         length = self.fileListWidget.count()
         file_paths = [self.fileListWidget.item(i).text() for i in range(length)]
-        print(f"Starting to combine {length} PDFs: {file_paths}")
+        print(f"Starting to merge {length} PDFs: {file_paths}")
 
-        process_dialog = QProgressDialog("Combining PDFs...", "Cancel", 0, len(file_paths), self)
+        process_dialog = QProgressDialog("Merging PDFs...", "Cancel", 0, len(file_paths), self)
         process_dialog.setMinimumSize(450, 100)
-        process_dialog.setWindowTitle("Combining PDFs")
+        process_dialog.setWindowTitle("Merging PDFs")
         process_dialog.setWindowModality(QtCore.Qt.WindowModal)
 
         def tick_callback():
@@ -244,16 +244,16 @@ class MainWindow(QMainWindow):
                 raise UserCancelled()
 
         try:
-            combine_pdf_files(file_paths, output_path, self.getBookmarkMode(), tick_callback)
+            merge_pdf_files(file_paths, output_path, self.getBookmarkMode(), tick_callback)
         except UserCancelled:
             show_message("You have cancelled the merge operation.", "Cancelled")
             print("User cancelled the merge operation.")
             return
 
         process_dialog.reset()
-        print("Finished combining PDFs!")
+        print("Finished merging PDFs!")
 
-        show_message("Finished combining PDFs!", "Success")
+        show_message("Finished merging PDFs!", "Success")
 
 
 def main():
