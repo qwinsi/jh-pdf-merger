@@ -10,12 +10,13 @@ class BookmarkMode(enum.Enum):
     # source file names and bookmark are used as output bookmarks
     FILE_NAME_AND_SECTION_AS_BOOKMARK = 2
 
-def combine_pdf_files(source_files: list[str], output_file: str, bookmark_mode: BookmarkMode):
+def combine_pdf_files(source_files: list[str], output_file: str, bookmark_mode: BookmarkMode, tick_callback):
     """
     Combine multiple PDF files into one.
     :param source_files: list of source PDF file paths
     :param output_file: output PDF file path
     :param bookmark_mode: BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK is commonly used.
+    :param tick_callback: a callback function to be called after each file is processed. Set it to None if not needed.
     :return: None
     """
     merger = PdfWriter()
@@ -43,6 +44,8 @@ def combine_pdf_files(source_files: list[str], output_file: str, bookmark_mode: 
             file_name = file_name[:-4]
 
         with open(file_path, 'rb') as pdf_file:
+            if tick_callback is not None:
+                tick_callback()
             pdf_reader = PdfReader(pdf_file)
             merger.append_pages_from_reader(pdf_reader)
             new_outline = merger.add_outline_item(file_name, page_num)

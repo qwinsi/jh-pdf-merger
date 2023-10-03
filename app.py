@@ -5,10 +5,11 @@ from PyQt5.QtCore import pyqtSignal
 
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QAction, \
     QVBoxLayout, QHBoxLayout, QFileDialog, QListWidget, QLabel, QPlainTextEdit, QSpacerItem, QSizePolicy, QCheckBox, \
-    QButtonGroup
+    QButtonGroup, QProgressDialog
 
 from merger import combine_pdf_files, BookmarkMode
 
+_APP_NAME = "PDF Merger"
 
 # popup a warning dialog
 def request_confirmation(msg: str) -> bool:
@@ -20,6 +21,14 @@ def request_confirmation(msg: str) -> bool:
     msg_box.setDefaultButton(QMessageBox.Cancel)
     result = msg_box.exec()
     return result == QMessageBox.Ok
+
+# popup a simple message box
+def show_message(msg: str, title: str):
+    msg_box = QMessageBox()
+    msg_box.setWindowTitle(title)
+    msg_box.setText(msg)
+    msg_box.setStandardButtons(QMessageBox.Ok)
+    msg_box.exec()
 
 
 class MyPlainTextEdit(QPlainTextEdit):
@@ -36,6 +45,8 @@ class MyPlainTextEdit(QPlainTextEdit):
         else:
             super().keyPressEvent(event)
 
+class UserCancelled(Exception):
+    pass
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -43,7 +54,7 @@ class MainWindow(QMainWindow):
         self._initUI()
 
     def _initUI(self):
-        self.setWindowTitle("File Selection Example")
+        self.setWindowTitle(_APP_NAME)
         self.setGeometry(100, 100, 600, 400)
 
         # Create a QListWidget to display selected filenames
@@ -182,15 +193,29 @@ class MainWindow(QMainWindow):
         file_paths = [self.fileListWidget.item(i).text() for i in range(length)]
         print(f"Starting to combine {length} PDFs: {file_paths}")
 
-        combine_pdf_files(file_paths, output_path, BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK)
+        process_dialog = QProgressDialog("Combining PDFs...", "Cancel", 0, len(file_paths), self)
+        process_dialog.setMinimumSize(450, 100)
+        process_dialog.setWindowTitle("Combining PDFs")
+        process_dialog.setWindowModality(QtCore.Qt.WindowModal)
 
+        def tick_callback():
+            # For development test use: Sleep 1 seconds to simulate a long-running task
+            QtCore.QThread.msleep(1000)
+            process_dialog.setValue(process_dialog.value() + 1)
+            if process_dialog.wasCanceled():
+                raise UserCancelled()
+
+        try:
+            combine_pdf_files(file_paths, output_path, BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK, tick_callback)
+        except UserCancelled:
+            show_message("You have cancelled the merge operation.", "Cancelled")
+            print("User cancelled the merge operation.")
+            return
+
+        process_dialog.reset()
         print("Finished combining PDFs!")
 
-        ok_msg_box = QMessageBox()
-        ok_msg_box.setWindowTitle("Success")
-        ok_msg_box.setText("Finished combining PDFs!")
-        ok_msg_box.setStandardButtons(QMessageBox.Ok)
-        ok_msg_box.exec()
+        show_message("Finished combining PDFs!", "Success")
 
 
 def main():
