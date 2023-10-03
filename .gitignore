@@ -7,3 +7,5 @@ venv/
 *.pyc
 build/
 dist/
+
+tool/jh-pdf-merger.ico
