@@ -48,8 +48,14 @@ def combine_pdf_files(source_files: list[str], output_file: str, bookmark_mode: 
                 tick_callback()
             pdf_reader = PdfReader(pdf_file)
             merger.append_pages_from_reader(pdf_reader)
-            new_outline = merger.add_outline_item(file_name, page_num)
-            insert_bookmarks(pdf_reader, pdf_reader.outline, new_outline)
+            if bookmark_mode != BookmarkMode.NO_BOOKMARK:
+                if bookmark_mode == BookmarkMode.FILE_NAME_AS_BOOKMARK:
+                    merger.add_outline_item(file_name, page_num)
+                elif bookmark_mode == BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK:
+                    new_outline = merger.add_outline_item(file_name, page_num)
+                    insert_bookmarks(pdf_reader, pdf_reader.outline, new_outline)
+                else:
+                    pass
             page_num += len(pdf_reader.pages)
 
     merger.write(output_file)
