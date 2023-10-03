@@ -26,7 +26,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='merger-app',
+    name='JH PDF Merger',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -38,6 +38,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+
 coll = COLLECT(
     exe,
     a.binaries,
@@ -46,5 +47,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='app',
+    name='jh_pdf_merger',
 )

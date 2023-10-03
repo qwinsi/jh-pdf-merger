@@ -5,11 +5,12 @@ from PyQt5.QtCore import pyqtSignal
 
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox, QAction, \
     QVBoxLayout, QHBoxLayout, QFileDialog, QListWidget, QLabel, QPlainTextEdit, QSpacerItem, QSizePolicy, QCheckBox, \
-    QButtonGroup, QProgressDialog
+    QButtonGroup, QProgressDialog, QDialog
 
 from merger import merge_pdf_files, BookmarkMode
 
-_APP_NAME = "PDF Merger"
+_APP_NAME = "JH PDF Merger"
+_WEBSITE_URL = "https://github.com/qwinsi/jh-pdf-merger"
 
 
 # popup a warning dialog
@@ -52,6 +53,21 @@ class UserCancelled(Exception):
     pass
 
 
+class AboutDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(f"About {_APP_NAME}")
+        # self.setGeometry(100, 100, 600, 400)
+        self.setMinimumSize(360, 120)
+
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(f"<h1>{_APP_NAME}</h1>"))
+        layout.addWidget(QLabel("Version 1.0.0"))
+        layout.addWidget(QLabel("This is an open source PDF merger."))
+        layout.addWidget(QLabel(f"For more information please visit <a href='{_WEBSITE_URL}'>{_WEBSITE_URL}</a>"))
+        self.setLayout(layout)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -63,7 +79,7 @@ class MainWindow(QMainWindow):
 
         # Create a QListWidget to display selected filenames
         self.fileListWidget = QListWidget(self)
-        self.fileListWidget.setGeometry(0, 0, 600, 800)
+        self.fileListWidget.setGeometry(0, 0, 600, 1000)
         self.fileListWidget.clicked.connect(self.openFileDialog)
 
         self.bookmark_enabled_checkbox = QCheckBox("Make bookmark")
@@ -94,8 +110,6 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.bookmark_enabled_checkbox)
         # There should be an indent for the radio buttons. So that the user can know they are related to the checkbox
-        # for button in self.bookmark_mode_group.buttons():
-        #     layout.addWidget(button)
         hierarchy_layout = QHBoxLayout()
         hierarchy_layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Minimum))
         radio_group_layout = QVBoxLayout()
@@ -177,7 +191,8 @@ class MainWindow(QMainWindow):
             return BookmarkMode.NO_BOOKMARK
 
     def openAboutDialog(self):
-        QMessageBox.about(self, "About", "This is my awesome program.\n https://www.example.com")
+        dialog = AboutDialog(self)
+        dialog.exec()
 
     def openFileDialog(self):
         options = QFileDialog.Options()
