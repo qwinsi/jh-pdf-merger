@@ -70,13 +70,13 @@ class MainWindow(QMainWindow):
         self.bookmark_enabled_checkbox.setChecked(True)
         # a group of radio buttons to select bookmark mode
         self.bookmark_mode_group = QButtonGroup()
-        both_file_name_and_section_radio = QCheckBox("from file names and bookmarks")
-        both_file_name_and_section_radio.setChecked(True)
-        self.bookmark_mode_group.addButton(both_file_name_and_section_radio,
+        self._both_file_name_and_section_radio = QCheckBox("from file names and bookmarks")
+        self._both_file_name_and_section_radio.setChecked(True)
+        self.bookmark_mode_group.addButton(self._both_file_name_and_section_radio,
                                            BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK.value)
         self.bookmark_mode_group.setExclusive(True)
-        only_file_name_radio = QCheckBox("from only file names")
-        self.bookmark_mode_group.addButton(only_file_name_radio, BookmarkMode.FILE_NAME_AS_BOOKMARK.value)
+        self._only_file_name_radio = QCheckBox("from only file names")
+        self.bookmark_mode_group.addButton(self._only_file_name_radio, BookmarkMode.FILE_NAME_AS_BOOKMARK.value)
 
         self.bookmark_enabled_checkbox.stateChanged.connect(
             lambda state: self._toggleBookmarkMode(state == QtCore.Qt.Checked))
@@ -99,8 +99,8 @@ class MainWindow(QMainWindow):
         hierarchy_layout = QHBoxLayout()
         hierarchy_layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Minimum))
         radio_group_layout = QVBoxLayout()
-        radio_group_layout.addWidget(only_file_name_radio)
-        radio_group_layout.addWidget(both_file_name_and_section_radio)
+        radio_group_layout.addWidget(self._only_file_name_radio)
+        radio_group_layout.addWidget(self._both_file_name_and_section_radio)
         hierarchy_layout.addLayout(radio_group_layout)
         layout.addLayout(hierarchy_layout)
 
@@ -165,6 +165,17 @@ class MainWindow(QMainWindow):
                 button.setEnabled(False)  # the checkbox gets grey
                 button.setChecked(False)
 
+    def getBookmarkMode(self) -> BookmarkMode:
+        should_make_bookmark = self.bookmark_enabled_checkbox.isChecked()
+        if should_make_bookmark:
+            if self._only_file_name_radio.isChecked():
+                return BookmarkMode.FILE_NAME_AS_BOOKMARK
+            else:
+                # assert self._both_file_name_and_section_radio.isChecked()
+                return BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK
+        else:
+            return BookmarkMode.NO_BOOKMARK
+
     def openAboutDialog(self):
         QMessageBox.about(self, "About", "This is my awesome program.\n https://www.example.com")
 
@@ -227,13 +238,13 @@ class MainWindow(QMainWindow):
 
         def tick_callback():
             # For development test use: Sleep 1 seconds to simulate a long-running task
-            QtCore.QThread.msleep(1000)
+            QtCore.QThread.msleep(100)
             process_dialog.setValue(process_dialog.value() + 1)
             if process_dialog.wasCanceled():
                 raise UserCancelled()
 
         try:
-            combine_pdf_files(file_paths, output_path, BookmarkMode.FILE_NAME_AND_SECTION_AS_BOOKMARK, tick_callback)
+            combine_pdf_files(file_paths, output_path, self.getBookmarkMode(), tick_callback)
         except UserCancelled:
             show_message("You have cancelled the merge operation.", "Cancelled")
             print("User cancelled the merge operation.")
