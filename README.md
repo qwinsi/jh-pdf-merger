@@ -1,8 +1,22 @@
 # JH PDF Merger
 
+<h3 align="center"> English | <a href='./README-zh_CN.md'>简体中文</a></h3>
+
 *JH PDF Merger* is a simple GUI application to merge multiple PDF files into one.
 
 The bookmarks of the merged PDF file will be created based on the file name and bookmarks of the original PDF file.
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [TODO List](#todo-list)
+- [Developing](#developing)
+  - [Install dependencies](#install-dependencies)
+  - [Running](#running)
+  - [Translation](#translation)
+  - [Packaging](#packaging)
+- [Contributing](#contributing)
 
 ## Installation
 
@@ -18,7 +32,7 @@ you may need to download the source code and run the python program directly. Se
 Open the application, do the following steps.
 
 1. Click "File" -> "Add Files" to add PDF files.
-2. The "Output Path" box at the bottom has automatically been filled with a default path for the output file. You can change it if you want.
+2. The "Output Path" box at the bottom has automatically been filled with a default path for the output file. You can change it if you want to customize it.
 3. Click "Run" -> "Merge Files" to merge the PDF files.
 4. Wait for the program to finish. It will pop up a message box when it's done.
 
@@ -28,7 +42,7 @@ Open the application, do the following steps.
 
 - [ ] Publish Linux and macOS versions releases.
 - [ ] Add more languages support.
-- [ ] Add more features such as splitting or manipulation operations on PDF files.
+- [ ] Add more features such as splitting or other manipulation operations on PDF files.
 
 ## Developing
 
@@ -41,7 +55,7 @@ python -m venv venv
 ./venv/Scripts/activate
 pip install -r requirements.txt
 ```
-### Runnning
+### Running
 
 ```shell
 lrelease ./lang/*.ts # Generate ./lang/*.qm files
@@ -56,16 +70,18 @@ If you don't want to install Qt, you can get *.qm files from our latest release.
 
 To help with the translation, do the following steps.
 
-First run pylupdate5 to update the .ts files.
+First run pylupdate5 to update the .ts files. Note that if the source code is not changed, the .ts files will not be changed as well.
 
 ```shell
 pylupdate5 app.py -ts ./lang/*.ts
 ```
 Then manually edit the ts file you want to translate. e.g. ./lang/zh_CN.ts
 
-Finally use Qt’s lrelease utility to convert the .ts files to .qm files.
+Finally use Qt’s lrelease utility to convert the .ts files to .qm files. Run the program to check your translation.
+
 ```shell
 lrelease ./lang/*.ts
+python app.py
 ```
 
 ### Packaging
