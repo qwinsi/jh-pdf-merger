@@ -38,6 +38,65 @@ Open the application, do the following steps.
 
 ![steps](assets/steps.png)
 
+### Making bookmarks
+
+There are 3 methods for making bookmarks. You can click the button in the main windows to switch between them.
+
+- **Method 1**: (Default) The bookmarks will be created based on both file name and bookmarks of original PDF files. This happens when you check both the "Create bookmarks" checkbox and the "from only selected file's names" checkbox.
+- **Method 2**: The bookmarks will be created based on the file name of original PDF files. This happens when you check the "Create bookmarks" checkbox and uncheck the "from only selected file's names" checkbox.
+- **Method 3**: No bookmarks will be created. This happens when you uncheck the "Create bookmarks" checkbox.
+
+For example, say you have 2 PDF files: `file-A.pdf`, `file-B.pdf`.
+
+```
+file-A.pdf
+│-- Chapter 1
+|---- Section 1.1
+|---- Section 1.2
+
+
+file-B.pdf
+|-- Chapter 2
+|---- Section 2.1
+|---- Section 2.2
+|-- Chapter 3
+|---- Section 3.1
+|---- Section 3.2
+```
+
+Method 1 will give you:
+
+```
+merge-output.pdf
+|-- file-A
+|---- Chapter 1
+|------ Section 1.1
+|------ Section 1.2
+|-- file-B
+|---- Chapter 2
+|------ Section 2.1
+|------ Section 2.2
+|---- Chapter 3
+|------ Section 3.1
+|------ Section 3.2
+```
+
+Method 2 will give you:
+
+```
+merge-output.pdf
+|-- file-A
+|-- file-B
+```
+
+Method 3 will give you:
+
+```
+merge-output.pdf
+(No bookmarks)
+```
+
+
 ## TODO List
 
 - [ ] Publish Linux and macOS versions releases.
