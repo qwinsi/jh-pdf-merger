@@ -1,6 +1,38 @@
 # JH PDF Merger
 
+*JH PDF Merger* is a simple GUI application to merge multiple PDF files into one.
+
+The bookmarks of the merged PDF file will be created based on the file name and bookmarks of the original PDF file.
+
+## Installation
+
+Download the latest release from [the Releases page](https://github.com/qwinsi/jh-pdf-merger/releases).
+
+At present, only Windows version of the application is provided.
+
+For Linux or macOS users, because there is no ready-to-use release so far,
+you may need to download the source code and run the python program directly. See the [Developing](#developing) section below for more details.
+
+## Usage
+
+Open the application, do the following steps.
+
+1. Click "File" -> "Add Files" to add PDF files.
+2. The "Output Path" box at the bottom has automatically been filled with a default path for the output file. You can change it if you want.
+3. Click "Run" -> "Merge Files" to merge the PDF files.
+4. Wait for the program to finish. It will pop up a message box when it's done.
+
+![steps](assets/steps.png)
+
+## TODO List
+
+- [ ] Publish Linux and macOS versions releases.
+- [ ] Add more languages support.
+- [ ] Add more features such as splitting or manipulation operations on PDF files.
+
 ## Developing
+
+This program is written in Python and uses PyQt5 as the GUI framework, so technically it can run on any platform that supports Python and PyQt5 (Windows, Linux, macOS, etc.).
 
 ### Install dependencies
 
@@ -15,15 +47,12 @@ pip install -r requirements.txt
 lrelease ./lang/*.ts # Generate ./lang/*.qm files
 python app.py
 ```
-`lrelease` is shipped with Qt. You can find it in the Qt installation directory. e.g.
-```
-C:\Qt\Qt5.14.2\5.14.2\mingw73_64\bin\lrelease.exe
-```
+Note that the `lrelease` tool is shipped with Qt. You can find it in the Qt installation directory. e.g. `C:\Qt\Qt5.14.2\5.14.2\mingw73_64\bin\lrelease.exe`
 
 If you don't want to install Qt, you can get *.qm files from our latest release. Download the zip file and extract it, *qm files are in the `lang/` folder.
 
 
-### I18n
+### Translation
 
 To help with the translation, do the following steps.
 
@@ -51,3 +80,6 @@ pyinstaller app.spec
 Now you can find `dist/jh_pdf_merger` folder, which contains the executable file `JH PDF Merger.exe` and all the dependencies.
 You can copy this folder to anywhere you want.
 
+## Contributing
+
+Feel free to open an issue or submit a pull request.
