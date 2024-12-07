@@ -99,6 +99,7 @@ merge-output.pdf
 
 ## TODO List
 
+- [ ] New bookmark-making method: Combine all bookmarks of original PDF files (without file names).
 - [ ] Publish Linux and macOS versions releases.
 - [ ] Add more languages support.
 - [ ] Add more features such as splitting or other manipulation operations on PDF files.
