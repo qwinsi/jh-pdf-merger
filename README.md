@@ -51,17 +51,17 @@ For example, say you have 2 PDF files: `file-A.pdf`, `file-B.pdf`.
 ```
 file-A.pdf
 │-- Chapter 1
-|---- Section 1.1
-|---- Section 1.2
+    |-- Section 1.1
+    |-- Section 1.2
 
 
 file-B.pdf
 |-- Chapter 2
-|---- Section 2.1
-|---- Section 2.2
+|   |-- Section 2.1
+|   |-- Section 2.2
 |-- Chapter 3
-|---- Section 3.1
-|---- Section 3.2
+    |-- Section 3.1
+    |-- Section 3.2
 ```
 
 Method 1 will give you:
@@ -69,16 +69,16 @@ Method 1 will give you:
 ```
 merge-output.pdf
 |-- file-A
-|---- Chapter 1
-|------ Section 1.1
-|------ Section 1.2
+|   |-- Chapter 1
+|       |-- Section 1.1
+|       |-- Section 1.2
 |-- file-B
-|---- Chapter 2
-|------ Section 2.1
-|------ Section 2.2
-|---- Chapter 3
-|------ Section 3.1
-|------ Section 3.2
+    |-- Chapter 2
+    |   |-- Section 2.1
+    |   |-- Section 2.2
+    |-- Chapter 3
+        |-- Section 3.1
+        |-- Section 3.2
 ```
 
 Method 2 will give you:
